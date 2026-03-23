@@ -13,14 +13,14 @@ export default function Header() {
     const [open, setOpen] = useState(false)
 
     return (
-        <div className="min-h-screen">
+        <div className="">
             <header className="bg-black text-white border-b border-gray-800">
 
                 <div className="hidden md:flex items-center justify-between px-8 py-4">
                     <h1 className="text-2xl font-bold text-pink-500 tracking-tight">Dribbble</h1>
 
                     <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2 bg-gray-800 rounded-full px-4 py-2">
+                        <div className="flex items-center gap-2 rounded-full px-4 py-2">
                             <SearchIcon />
                             <input type="text" placeholder="What are you looking for?" className="bg-transparent text-sm outline-none w-52 text-gray-300 placeholder-gray-500" />
                         </div>
@@ -51,7 +51,7 @@ export default function Header() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-800 mx-4 mb-3 rounded-full px-4 py-2">
+                    <div className="flex items-center gap-2 mx-4 mb-3 rounded-full px-4 py-2">
                         <SearchIcon />
                         <input type="text" placeholder="What are you looking for?" className="bg-transparent text-sm outline-none w-full text-gray-300 placeholder-gray-500" />
                     </div>
