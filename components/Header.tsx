@@ -1,5 +1,7 @@
 "use client"
 import { useState } from "react"
+import { useSession, signIn, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 const NAV = ["Explore", "Hire Talent", "Community"]
 
@@ -11,7 +13,8 @@ const SearchIcon = () => (
 
 export default function Header() {
     const [open, setOpen] = useState(false)
-
+    const { data: session } = useSession();
+    const router = useRouter();
     return (
         <div className="">
             <header className="bg-black text-white border-b border-gray-800">
@@ -32,8 +35,23 @@ export default function Header() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="text-sm font-medium text-white hover:text-pink-400 transition-colors">Log in</button>
-                        <button className="text-sm font-semibold bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full transition-colors">Sign up</button>
+                        {session?.user ? (
+                            <button onClick={() => signOut()} className="text-sm font-medium text-white hover:text-pink-400 transition-colors">Log out</button>
+                        ) : (
+                            <button onClick={() => signIn()} className="text-sm font-medium text-white hover:text-pink-400 transition-colors">Log in</button>
+                        )}
+
+                        {
+                            !session?.user ? (
+                                <button onClick={() => router.push("/signups")} className="text-sm font-semibold bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full transition-colors">
+                                    Sign up
+                                </button>
+                            ) : (
+                                <button onClick={() => router.push("/profile")} className="text-sm font-medium text-white bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full transition-colors">
+                                    {session.user.name}
+                                </button>
+                            )
+                        }
                     </div>
                 </div>
 
@@ -46,8 +64,18 @@ export default function Header() {
                         </button>
                         <h1 className="text-xl font-bold text-pink-500 tracking-tight">Dribbble</h1>
                         <div className="flex items-center gap-2">
-                            <button className="text-sm font-medium text-white hover:text-pink-400 transition-colors">Log in</button>
-                            <button className="text-sm font-semibold bg-pink-500 hover:bg-pink-600 text-white px-4 py-1.5 rounded-full transition-colors">Sign up</button>
+                            {session?.user ? (
+                                <button onClick={() => signOut()} className="text-sm font-medium text-white hover:text-pink-400 bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-full transition-colors">Log out</button>
+                            ) : (
+                                <button onClick={() => signIn()} className="text-sm font-medium text-white hover:text-pink-400 transition-colors">Log in</button>
+                            )}
+                            {!session?.user && (
+                                <button
+                                    onClick={() => router.push("/signups")}
+                                    className="text-sm font-semibold bg-pink-500 hover:bg-pink-600 text-white px-4 py-1.5 rounded-full transition-colors">
+                                    Sign up
+                                </button>
+                            )}
                         </div>
                     </div>
 

@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { User } from "@/models/user.model";
 import dbConnect from "@/utils/dbConnect";
 import bcrypt from "bcryptjs";
@@ -9,7 +10,7 @@ export const authOptions: NextAuthOptions = {
         CredentialsProvider({
             name: "Credentials",
             credentials: {
-                identifier: { label: "Username or Email", type: "text" },
+                identifier: { label: "Email", type: "text" },
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
@@ -46,6 +47,10 @@ export const authOptions: NextAuthOptions = {
                     profilePicture: user.profilePicture,
                 };
             },
+        }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         }),
     ],
     callbacks: {

@@ -5,8 +5,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/footer";
 
-// next-auth
-import { SessionProvider } from "next-auth/react";
+import AuthProvider from "@/components/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,13 +32,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} px-4 h-full antialiased`}
     >
-      <SessionProvider>
+      <AuthProvider>
         <body className="min-h-full flex flex-col">
           <Header />
           {children}
           <Footer />
         </body>
-      </SessionProvider>
+      </AuthProvider>
     </html>
   );
 }
