@@ -36,6 +36,11 @@ const ProjectSchema = new mongoose.Schema({
         ref: "User",
         default: []
     },
+    saves: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "User",
+        default: []
+    },
     views: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: "User",
@@ -47,4 +52,8 @@ const ProjectSchema = new mongoose.Schema({
 
 }, { timestamps: true })
 
-export const Project = mongoose.models.Project || mongoose.model("Project", ProjectSchema);
+if (mongoose.models.Project) {
+    delete mongoose.models.Project;
+}
+
+export const Project = mongoose.model("Project", ProjectSchema);

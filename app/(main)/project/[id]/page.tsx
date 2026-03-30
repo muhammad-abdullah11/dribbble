@@ -1,6 +1,6 @@
 "use client"
 import Image from 'next/image'
-import { IoHeartOutline, IoHeart, IoBookmarkOutline, IoMailOutline, IoLogoTwitter, IoLinkOutline, IoLogoGithub, IoGridOutline } from "react-icons/io5"
+import { IoHeartOutline, IoHeart, IoBookmarkOutline, IoBookmark, IoMailOutline, IoLogoTwitter, IoLinkOutline, IoLogoGithub, IoGridOutline } from "react-icons/io5"
 import { HiDownload } from "react-icons/hi"
 import { BsThreeDots } from "react-icons/bs"
 import axios from 'axios'
@@ -42,6 +42,15 @@ export default function ProjectPage({ params }: PageProps) {
         })
     }
 
+    const handleSave = () => {
+        if (!session?.user?.id) return router.push("/api/auth/signin")
+        const isSaved = project.saves?.includes(session.user.id)
+        setProject((prev: any) => ({ ...prev, saves: isSaved ? (prev.saves || []).filter((uid: string) => uid !== session.user.id) : [...(prev.saves || []), session.user.id] }))
+        axios.post(`/api/project/${id}/save`).catch(() => {
+            setProject((prev: any) => ({ ...prev, saves: !isSaved ? (prev.saves || []).filter((uid: string) => uid !== session.user.id) : [...(prev.saves || []), session.user.id] }))
+        })
+    }
+
     if (loading || !project) {
         return (
             <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -51,6 +60,7 @@ export default function ProjectPage({ params }: PageProps) {
     }
 
     const isLiked = session?.user?.id && project.likes?.includes(session.user.id)
+    const isSaved = session?.user?.id && project.saves?.includes(session.user.id)
 
     return (
         <main className="">
@@ -82,8 +92,8 @@ export default function ProjectPage({ params }: PageProps) {
                         {isLiked ? <IoHeart size={16} /> : <IoHeartOutline size={16} />}
                         <span className={isLiked ? "text-pink-500" : ""}>{project.likes?.length || 0}</span>
                     </button>
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-black text-sm font-medium transition-colors">
-                        <IoBookmarkOutline size={16} />
+                    <button onClick={handleSave} className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${isSaved ? "border-pink-300 text-pink-500 bg-pink-50" : "border-gray-300 hover:border-gray-400 text-gray-700 hover:text-black"}`}>
+                        {isSaved ? <IoBookmark size={16} /> : <IoBookmarkOutline size={16} />}
                     </button>
                     <button className="flex items-center gap-2 px-5 py-2 rounded-full bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold transition-colors">
                         <IoMailOutline size={16} /> Get in touch
@@ -161,8 +171,8 @@ export default function ProjectPage({ params }: PageProps) {
                         <button onClick={handleLike} className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-colors text-sm font-medium ${isLiked ? "border-pink-500 text-pink-500 bg-pink-500/10" : "border-gray-300 text-gray-700 hover:border-gray-400 hover:text-black"}`}>
                             {isLiked ? <IoHeart size={18} /> : <IoHeartOutline size={18} />} {project.likes?.length || 0}
                         </button>
-                        <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-300 hover:border-gray-400 text-sm font-medium  transition-colors">
-                            <IoBookmarkOutline size={18} /> Save
+                        <button onClick={handleSave} className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-colors text-sm font-medium ${isSaved ? "border-pink-500 text-pink-500 bg-pink-500/10" : "border-gray-300 text-gray-700 hover:border-gray-400 hover:text-black"}`}>
+                            {isSaved ? <IoBookmark size={18} /> : <IoBookmarkOutline size={18} />} {isSaved ? "Saved" : "Save"}
                         </button>
                     </div>
                     <div className="flex items-center gap-2">

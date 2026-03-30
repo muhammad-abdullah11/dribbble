@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { IoChevronForward, IoChevronDown, IoOptions } from "react-icons/io5"
-import { BsBookmark, BsHeart, BsHeartFill } from "react-icons/bs"
+import { BsBookmark, BsBookmarkFill, BsHeart, BsHeartFill } from "react-icons/bs"
 import { TbEyeBitcoin } from "react-icons/tb"
 import { FaEye } from "react-icons/fa6"
 import axios from "axios"
@@ -39,6 +39,16 @@ export default function AllProjects() {
         })
     }
 
+    const handleSave = async (e: React.MouseEvent, id: string, isSaved: boolean) => {
+        e.stopPropagation()
+        if (!session?.user?.id) return router.push("/api/auth/signin")
+        
+        setProjects(prev => prev.map(p => p._id === id ? { ...p, saves: isSaved ? (p.saves || []).filter((uid: string) => uid !== session.user.id) : [...(p.saves || []), session.user.id] } : p))
+        axios.post(`/api/project/${id}/save`).catch(() => {
+            setProjects(prev => prev.map(p => p._id === id ? { ...p, saves: !isSaved ? (p.saves || []).filter((uid: string) => uid !== session.user.id) : [...(p.saves || []), session.user.id] } : p))
+        })
+    }
+
     const filtered = active === "Discover" || active === "All" ? projects : projects.filter(p => p.category === active)
 
     return (
@@ -65,6 +75,7 @@ export default function AllProjects() {
                     <p className="text-center py-20 col-span-full text-gray-400">No projects found.</p>
                 ) : filtered.map((p, i) => {
                     const isLiked = session?.user?.id && Array.isArray(p.likes) && p.likes.includes(session.user.id);
+                    const isSaved = session?.user?.id && Array.isArray(p.saves) && p.saves.includes(session.user.id);
                     return (
                         <div key={i} className="flex flex-col gap-3" onClick={() => router.push(`/project/${p._id}`)}>
                             <div className="group relative rounded-2xl overflow-hidden cursor-pointer h-56 w-full flex items-center justify-center bg-gray-900 border border-gray-800">
@@ -75,7 +86,9 @@ export default function AllProjects() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-between p-4">
                                     <span className="text-white text-sm font-semibold truncate mr-2">{p.title}</span>
                                     <div className="flex gap-2 shrink-0">
-                                        <button onClick={(e) => e.stopPropagation()} className="text-white bg-black/40 p-2 rounded-full hover:bg-pink-500 hover:text-white transition-colors backdrop-blur-sm"><BsBookmark size={14} /></button>
+                                        <button onClick={(e) => handleSave(e, p._id, isSaved)} className={`${isSaved ? 'text-pink-500' : 'text-white hover:bg-pink-500 hover:text-white'} bg-black/40 p-2 rounded-full transition-colors backdrop-blur-sm`}>
+                                            {isSaved ? <BsBookmarkFill size={14} /> : <BsBookmark size={14} />}
+                                        </button>
                                         <button onClick={(e) => handleLike(e, p._id, isLiked)} className={`${isLiked ? 'text-pink-500' : 'text-white hover:bg-pink-500 hover:text-white'} bg-black/40 p-2 rounded-full transition-colors backdrop-blur-sm`}>
                                             {isLiked ? <BsHeartFill size={14} /> : <BsHeart size={14} />}
                                         </button>
