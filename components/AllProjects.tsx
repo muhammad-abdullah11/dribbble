@@ -6,8 +6,10 @@ import { BsBookmark, BsHeart } from "react-icons/bs"
 import { TbEyeBitcoin } from "react-icons/tb"
 import { FaEye } from "react-icons/fa6"
 import axios from "axios"
+import { useRouter } from "next/navigation"
 
 export default function AllProjects() {
+    const router = useRouter()
     const [active, setActive] = useState("Discover")
     const [projects, setProjects] = useState<any[]>([])
     const [categories, setCategories] = useState(["Discover", "All"])
@@ -50,7 +52,7 @@ export default function AllProjects() {
                 {filtered.length === 0 ? (
                     <p className="text-center py-20 col-span-full text-gray-400">No projects found.</p>
                 ) : filtered.map((p, i) => (
-                    <div key={i} className="flex flex-col gap-3">
+                    <div key={i} className="flex flex-col gap-3" onClick={() => router.push(`/project/${p._id}`)}>
                         <div className="group relative rounded-2xl overflow-hidden cursor-pointer h-56 w-full flex items-center justify-center bg-gray-900 border border-gray-800">
                             {p.image ? <img src={p.image} alt={p.title} className="w-full h-full object-cover" /> : (
                                 <span className="text-sm text-gray-500">No Image</span>

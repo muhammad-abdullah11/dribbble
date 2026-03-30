@@ -8,7 +8,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     try {
         await dbConnect();
         const { id } = await params;
-        const project = await Project.findById(id);
+        const project = await Project.findById(id).populate("author", "username fullName email avatarUrl");
         if (!project) {
             return NextResponse.json({ success: false, error: "Project not found", id }, { status: 404 });
         }
