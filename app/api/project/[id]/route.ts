@@ -36,4 +36,24 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         console.error(error);
         return NextResponse.json({ success: false, error: "Failed to delete project" }, { status: 500 });
     }
-}
+};
+
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    try {
+        await dbConnect();
+        const { id } = await params;
+        const { title, description, image, category, githubUrl, liveUrl, tags } = await req.json();
+        const project = await Project.findByIdAndUpdate(id, { title, description, image, category, githubUrl, liveUrl, tags }, { new: true });
+        if (!project) {
+            return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
+        }
+        return NextResponse.json({ success: true, message: "Project updated successfully", project });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ success: false, error: "Failed to update project" }, { status: 500 });
+    }
+};
