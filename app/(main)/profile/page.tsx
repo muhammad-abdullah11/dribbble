@@ -100,10 +100,22 @@ function MyProjects({ session }: { session: any }) {
     }, [session?.user?.id])
 
     if (loading) return <div className="text-center py-20 text-gray-500">Loading...</div>
-    if (shots.length === 0) return <Placeholder title="No work to show" desc="Upload your first project to showcase your skills to the community." />
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-white">
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-700 rounded-xl text-center min-h-[280px] bg-black h-full">
+                <h3 className="text-xl font-bold mb-3 text-white">Upload your first shot</h3>
+                <p className="text-sm text-gray-400 mb-6 leading-relaxed max-w-[220px]">
+                    Show off your best work. Get feedback, likes and be a part of a growing community.
+                </p>
+                <button 
+                    onClick={() => router.push('/new-project')} 
+                    className="px-6 py-2.5 bg-white text-black font-semibold rounded-full text-sm hover:bg-gray-200 transition-colors"
+                >
+                    Upload your first shot
+                </button>
+            </div>
+            
             {shots.map((shot) => (
                 <div key={shot._id} className="flex flex-col gap-3 group cursor-pointer" onClick={() => router.push(`/project/${shot._id}`)}>
                     <div className="relative rounded-lg overflow-hidden h-60 w-full bg-gray-900 border border-gray-800">

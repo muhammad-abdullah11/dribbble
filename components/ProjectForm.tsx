@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback } from "react"
 import Image from "next/image"
 import { IoCloudUploadOutline, IoClose, IoAddOutline, IoLogoGithub, IoLinkOutline, IoGridOutline, IoCheckmarkCircle } from "react-icons/io5"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 const Categories = ["Mobile App", "Web Design", "Branding", "Illustration", "Animation", "Product Design", "UI Design", "Other"]
 
@@ -26,12 +28,15 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
     const [githubUrl, setGithubUrl] = useState(isEditing ? tempProjectData.githubUrl : "")
     const [category, setCategory] = useState(isEditing ? tempProjectData.category : "")
     const [imageUrl, setImageUrl] = useState(isEditing ? tempProjectData.image : "")
+    const [imageFile, setImageFile] = useState<File | null>(null)
     const [description, setDescription] = useState(isEditing ? tempProjectData.description : "")
     const [tags, setTags] = useState<string[]>(isEditing ? tempProjectData.tags : [])
     const [tagInput, setTagInput] = useState("")
     const [isDragging, setIsDragging] = useState(false)
     const [submitted, setSubmitted] = useState(false)
+    const [submitting, setSubmitting] = useState(false)
     const [imageError, setImageError] = useState(false)
+    const router = useRouter()
 
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -40,6 +45,7 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
         setIsDragging(false)
         const file = e.dataTransfer.files?.[0]
         if (file && file.type.startsWith("image/")) {
+            setImageFile(file)
             setImageUrl(URL.createObjectURL(file))
             setImageError(false)
         }
@@ -48,6 +54,7 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (file) {
+            setImageFile(file)
             setImageUrl(URL.createObjectURL(file))
             setImageError(false)
         }
@@ -68,10 +75,42 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
         if (e.key === "Backspace" && !tagInput && tags.length > 0) setTags(prev => prev.slice(0, -1))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        setSubmitted(true)
-        setTimeout(() => setSubmitted(false), 3000)
+        if (!imageFile && !imageUrl) return alert("Please provide an image.")
+        if (!category) return alert("Please select a category.")
+
+        setSubmitting(true)
+        try {
+            const formData = new FormData()
+            formData.append("title", title)
+            formData.append("description", description)
+            formData.append("category", category)
+            if (githubUrl) formData.append("githubUrl", githubUrl)
+            if (liveSiteUrl) formData.append("liveSiteUrl", liveSiteUrl)
+            tags.forEach(tag => formData.append("tags", tag))
+
+            if (imageFile) {
+                formData.append("image", imageFile)
+            } else if (imageUrl) {
+                const res = await fetch(imageUrl)
+                const blob = await res.blob()
+                formData.append("image", new File([blob], "image.jpg", { type: blob.type }))
+            }
+
+            const res = await axios.post("/api/project", formData)
+            if (res.data) {
+                setSubmitted(true)
+                setTimeout(() => {
+                    router.push("/profile")
+                }, 1500)
+            }
+        } catch (error) {
+            console.error(error)
+            alert("Failed to create project")
+        } finally {
+            setSubmitting(false)
+        }
     }
 
     return (
@@ -135,7 +174,7 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
                             <input
                                 type="url"
                                 value={imageUrl}
-                                onChange={e => { setImageUrl(e.target.value); setImageError(false) }}
+                                onChange={e => { setImageUrl(e.target.value); setImageError(false); setImageFile(null) }}
                                 placeholder="https://..."
                                 className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-300 placeholder-gray-600 outline-none focus:border-pink-500 transition-colors"
                             />
@@ -231,11 +270,11 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
                     </div>
 
                     <div className="pt-2 flex items-center justify-between">
-                        <button type="button" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                            {type === "create" ? "Save as draft" : "Cancel"}
+                        <button type="button" onClick={() => router.back()} className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                            {type === "create" ? "Cancel Upload" : "Cancel"}
                         </button>
-                        <button type="submit" className="px-8 py-3 rounded-full bg-pink-500 hover:bg-pink-600 active:scale-95 text-white text-sm font-semibold transition-all duration-150 shadow-lg shadow-pink-500/20">
-                            {type === "create" ? "Publish Project" : "Update Project"}
+                        <button disabled={submitting} type="submit" className={`px-8 py-3 rounded-full ${submitting ? "bg-pink-500/50 cursor-wait" : "bg-pink-500 hover:bg-pink-600 active:scale-95 shadow-lg shadow-pink-500/20"} text-white text-sm font-semibold transition-all duration-150`}>
+                            {submitting ? "Publishing..." : (type === "create" ? "Publish Project" : "Update Project")}
                         </button>
                     </div>
 
