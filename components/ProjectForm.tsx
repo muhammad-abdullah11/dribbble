@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import Image from "next/image"
 import { IoCloudUploadOutline, IoClose, IoAddOutline, IoLogoGithub, IoLinkOutline, IoGridOutline, IoCheckmarkCircle } from "react-icons/io5"
 import axios from "axios"
@@ -8,29 +8,18 @@ import { useRouter } from "next/navigation"
 
 const Categories = ["Mobile App", "Web Design", "Branding", "Illustration", "Animation", "Product Design", "UI Design", "Other"]
 
-const tempProjectData = {
-    title: "Personal Finance Investment Mobile App Design",
-    liveSiteUrl: "abc",
-    githubUrl: "abc",
-    category: "Mobile App",
-    image: "https://cdn.dribbble.com/userupload/47120482/file/6b9a9d0e27b278b503b4bb85c03ebfcc.png?resize=2048x1536&vertical=center",
-    description: "Hello there! Here's a design concept for a modern mobile app focused on personal finance management – perfect for anyone wanting fast, clear control over budgets, spending, and money transfers.",
-    tags: ["Personal Finance", "Investment", "Mobile App", "UI Design", "Fintech"],
-}
-
-
-export default function ProjectForm({ type }: { type: "create" | "edit" }) {
+export default function ProjectForm({ type, projectId }: { type: "create" | "edit", projectId?: string }) {
     const inputCls = "w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-600 outline-none focus:border-pink-500 transition-colors"
     const labelCls = "block text-sm font-semibold text-gray-200 mb-2"
-    const isEditing = type === "edit"
-    const [title, setTitle] = useState(isEditing ? tempProjectData.title : "")
-    const [liveSiteUrl, setLiveSiteUrl] = useState(isEditing ? tempProjectData.liveSiteUrl : "")
-    const [githubUrl, setGithubUrl] = useState(isEditing ? tempProjectData.githubUrl : "")
-    const [category, setCategory] = useState(isEditing ? tempProjectData.category : "")
-    const [imageUrl, setImageUrl] = useState(isEditing ? tempProjectData.image : "")
+    
+    const [title, setTitle] = useState("")
+    const [liveSiteUrl, setLiveSiteUrl] = useState("")
+    const [githubUrl, setGithubUrl] = useState("")
+    const [category, setCategory] = useState("")
+    const [imageUrl, setImageUrl] = useState("")
     const [imageFile, setImageFile] = useState<File | null>(null)
-    const [description, setDescription] = useState(isEditing ? tempProjectData.description : "")
-    const [tags, setTags] = useState<string[]>(isEditing ? tempProjectData.tags : [])
+    const [description, setDescription] = useState("")
+    const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
     const [isDragging, setIsDragging] = useState(false)
     const [submitted, setSubmitted] = useState(false)
@@ -39,6 +28,23 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
     const router = useRouter()
 
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    useEffect(() => {
+        if (type === "edit" && projectId) {
+            axios.get(`/api/project/${projectId}`).then(res => {
+                const p = res.data.project
+                if (p) {
+                    setTitle(p.title || "")
+                    setLiveSiteUrl(p.liveUrl || "")
+                    setGithubUrl(p.githubUrl || "")
+                    setCategory(p.category || "")
+                    setImageUrl(p.image || "")
+                    setDescription(p.description || "")
+                    setTags(p.tags || [])
+                }
+            }).catch(console.error)
+        }
+    }, [type, projectId])
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
@@ -92,13 +98,16 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
 
             if (imageFile) {
                 formData.append("image", imageFile)
-            } else if (imageUrl) {
+            } else if (imageUrl && !imageUrl.startsWith("http")) {
                 const res = await fetch(imageUrl)
                 const blob = await res.blob()
                 formData.append("image", new File([blob], "image.jpg", { type: blob.type }))
             }
 
-            const res = await axios.post("/api/project", formData)
+            const res = type === "edit" && projectId 
+                ? await axios.put(`/api/project/${projectId}`, formData)
+                : await axios.post("/api/project", formData)
+                
             if (res.data) {
                 setSubmitted(true)
                 setTimeout(() => {
@@ -107,7 +116,7 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
             }
         } catch (error) {
             console.error(error)
-            alert("Failed to create project")
+            alert("Failed to submit project")
         } finally {
             setSubmitting(false)
         }
@@ -118,14 +127,14 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
             <div className="max-w-3xl mx-auto px-4 py-12">
 
                 <div className="mb-10">
-                    <h1 className="text-3xl font-bold">Upload New Project</h1>
-                    <p className="text-gray-400 mt-2 text-sm">Share your design work with the Dribbble community.</p>
+                    <h1 className="text-3xl font-bold">{type === "edit" ? "Edit Project" : "Upload New Project"}</h1>
+                    <p className="text-gray-400 mt-2 text-sm">{type === "edit" ? "Make changes to your project." : "Share your design work with the Dribbble community."}</p>
                 </div>
 
                 {submitted && (
                     <div className="mb-6 flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-2xl px-5 py-4 text-green-400">
                         <IoCheckmarkCircle size={20} />
-                        <span className="text-sm font-medium">Project published successfully!</span>
+                        <span className="text-sm font-medium">Project saved successfully!</span>
                     </div>
                 )}
 
@@ -271,10 +280,10 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
 
                     <div className="pt-2 flex items-center justify-between">
                         <button type="button" onClick={() => router.back()} className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                            {type === "create" ? "Cancel Upload" : "Cancel"}
+                            Cancel
                         </button>
                         <button disabled={submitting} type="submit" className={`px-8 py-3 rounded-full ${submitting ? "bg-pink-500/50 cursor-wait" : "bg-pink-500 hover:bg-pink-600 active:scale-95 shadow-lg shadow-pink-500/20"} text-white text-sm font-semibold transition-all duration-150`}>
-                            {submitting ? "Publishing..." : (type === "create" ? "Publish Project" : "Update Project")}
+                            {submitting ? "Saving..." : (type === "create" ? "Publish Project" : "Update Project")}
                         </button>
                     </div>
 

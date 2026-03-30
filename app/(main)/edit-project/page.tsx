@@ -1,11 +1,8 @@
 import ProjectForm from "@/components/ProjectForm"
+import { redirect } from "next/navigation"
 
-const EditProjectPage = () => {
-    return (
-        <main className="">
-            <ProjectForm type="edit" />
-        </main>
-    )
+export default async function EditProjectPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+    const { id } = await searchParams
+    if (!id) redirect("/")
+    return <ProjectForm type="edit" projectId={id} />
 }
-
-export default EditProjectPage

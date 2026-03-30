@@ -127,8 +127,17 @@ function MyProjects({ session }: { session: any }) {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-4">
                              <span className="text-white text-sm font-medium truncate pr-4">{shot.title}</span>
                              <div className="flex items-center gap-2 shrink-0">
-                                 <button className="w-8 h-8 rounded-full bg-black/40 hover:bg-pink-500 text-white flex items-center justify-center transition-colors backdrop-blur-sm"><BsBookmark size={12} /></button>
-                                 <button className="w-8 h-8 rounded-full bg-black/40 hover:bg-pink-500 text-white flex items-center justify-center transition-colors backdrop-blur-sm"><BsHeart size={12} /></button>
+                                 {(session?.user?.id === shot.author?._id || session?.user?.id === shot.author) && (
+                                     <button 
+                                         onClick={(e) => { e.stopPropagation(); router.push(`/edit-project?id=${shot._id}`) }}
+                                         className="w-8 h-8 rounded-full bg-black/40 hover:bg-white hover:text-black text-white flex items-center justify-center transition-colors backdrop-blur-sm"
+                                         title="Edit Project"
+                                     >
+                                         <IoSettingsOutline size={12} />
+                                     </button>
+                                 )}
+                                 <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 rounded-full bg-black/40 hover:bg-pink-500 text-white flex items-center justify-center transition-colors backdrop-blur-sm"><BsBookmark size={12} /></button>
+                                 <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 rounded-full bg-black/40 hover:bg-pink-500 text-white flex items-center justify-center transition-colors backdrop-blur-sm"><BsHeart size={12} /></button>
                              </div>
                         </div>
                     </div>
