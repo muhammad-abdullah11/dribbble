@@ -23,4 +23,18 @@ export async function POST(req: Request) {
         console.error(error);
         return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
     }
-}
+};
+
+export async function GET(req: Request) {
+    try {
+        await dbConnect();
+        const projects = await Project.find().populate("author", "username fullName email");
+        if (!projects) {
+            return NextResponse.json({ error: "No projects found" }, { status: 404 });
+        }
+        return NextResponse.json({ message: "Projects fetched successfully", projects }, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
+    }
+};
