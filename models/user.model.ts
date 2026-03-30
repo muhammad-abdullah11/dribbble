@@ -37,7 +37,19 @@ const UserSchema = new mongoose.Schema({
     isProfileCompleted: {
         type: Boolean,
         default: false
-    }
+    },
+    likedProjects: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Project"
+        }
+    ],
+    savedProjects: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Project"
+        }
+    ]
 
 }, { timestamps: true })
 

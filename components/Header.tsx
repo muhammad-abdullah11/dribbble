@@ -20,7 +20,9 @@ export default function Header() {
             <header className="bg-black text-white border-b border-gray-800">
 
                 <div className="hidden md:flex items-center justify-between px-8 py-4">
-                    <h1 className="text-2xl font-bold text-pink-500 tracking-tight">Dribbble</h1>
+                    <h1
+                        onClick={() => router.push("/")}
+                        className="text-2xl font-bold text-pink-500 tracking-tight">Dribbble</h1>
 
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2 rounded-full px-4 py-2">

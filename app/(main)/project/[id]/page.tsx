@@ -1,10 +1,12 @@
 "use client"
 import Image from 'next/image'
-import { IoHeartOutline, IoBookmarkOutline, IoMailOutline, IoLogoTwitter, IoLinkOutline, IoLogoGithub, IoGridOutline } from "react-icons/io5"
+import { IoHeartOutline, IoHeart, IoBookmarkOutline, IoMailOutline, IoLogoTwitter, IoLinkOutline, IoLogoGithub, IoGridOutline } from "react-icons/io5"
 import { HiDownload } from "react-icons/hi"
 import { BsThreeDots } from "react-icons/bs"
 import axios from 'axios'
 import { useEffect, useState, use } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 interface PageProps {
     params: Promise<{ id: string }>
@@ -12,6 +14,8 @@ interface PageProps {
 
 export default function ProjectPage({ params }: PageProps) {
     const { id } = use(params)
+    const { data: session } = useSession()
+    const router = useRouter()
     const [project, setProject] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
@@ -29,6 +33,15 @@ export default function ProjectPage({ params }: PageProps) {
         fetchProject()
     }, [id])
 
+    const handleLike = () => {
+        if (!session?.user?.id) return router.push("/api/auth/signin")
+        const isLiked = project.likes?.includes(session.user.id)
+        setProject((prev: any) => ({ ...prev, likes: isLiked ? prev.likes.filter((uid: string) => uid !== session.user.id) : [...(prev.likes || []), session.user.id] }))
+        axios.post(`/api/project/${id}/like`).catch(() => {
+            setProject((prev: any) => ({ ...prev, likes: !isLiked ? prev.likes.filter((uid: string) => uid !== session.user.id) : [...(prev.likes || []), session.user.id] }))
+        })
+    }
+
     if (loading || !project) {
         return (
             <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -36,6 +49,8 @@ export default function ProjectPage({ params }: PageProps) {
             </div>
         )
     }
+
+    const isLiked = session?.user?.id && project.likes?.includes(session.user.id)
 
     return (
         <main className="">
@@ -63,11 +78,11 @@ export default function ProjectPage({ params }: PageProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 hover:border-gray-400 text-sm font-medium  transition-colors">
-                        <IoHeartOutline size={16} />
-                        <span>{project.likes || 0}</span>
+                    <button onClick={handleLike} className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${isLiked ? "border-pink-300 text-pink-500 bg-pink-50" : "border-gray-300 hover:border-gray-400 text-gray-700 hover:text-black"}`}>
+                        {isLiked ? <IoHeart size={16} /> : <IoHeartOutline size={16} />}
+                        <span className={isLiked ? "text-pink-500" : ""}>{project.likes?.length || 0}</span>
                     </button>
-                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 hover:border-gray-400 text-sm font-medium  transition-colors">
+                    <button className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-black text-sm font-medium transition-colors">
                         <IoBookmarkOutline size={16} />
                     </button>
                     <button className="flex items-center gap-2 px-5 py-2 rounded-full bg-pink-500 hover:bg-pink-600 text-white text-sm font-semibold transition-colors">
@@ -143,8 +158,8 @@ export default function ProjectPage({ params }: PageProps) {
 
                 <div className="flex items-center justify-between mt-10 pt-8 border-t border-gray-200">
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-300 hover:border-pink-400 text-sm font-medium  transition-colors">
-                            <IoHeartOutline size={18} /> {project.likes || 0}
+                        <button onClick={handleLike} className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-colors text-sm font-medium ${isLiked ? "border-pink-500 text-pink-500 bg-pink-500/10" : "border-gray-300 text-gray-700 hover:border-gray-400 hover:text-black"}`}>
+                            {isLiked ? <IoHeart size={18} /> : <IoHeartOutline size={18} />} {project.likes?.length || 0}
                         </button>
                         <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-300 hover:border-gray-400 text-sm font-medium  transition-colors">
                             <IoBookmarkOutline size={18} /> Save

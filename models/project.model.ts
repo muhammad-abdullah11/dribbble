@@ -32,12 +32,14 @@ const ProjectSchema = new mongoose.Schema({
         type: [String],
     },
     likes: {
-        type: Number,
-        default: 0
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "User",
+        default: []
     },
     views: {
-        type: Number,
-        default: 0
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "User",
+        default: []
     },
     comments: {
         type: [String],
