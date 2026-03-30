@@ -232,10 +232,10 @@ export default function ProjectForm({ type }: { type: "create" | "edit" }) {
 
                     <div className="pt-2 flex items-center justify-between">
                         <button type="button" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
-                            Save as draft
+                            {type === "create" ? "Save as draft" : "Cancel"}
                         </button>
                         <button type="submit" className="px-8 py-3 rounded-full bg-pink-500 hover:bg-pink-600 active:scale-95 text-white text-sm font-semibold transition-all duration-150 shadow-lg shadow-pink-500/20">
-                            Publish Project
+                            {type === "create" ? "Publish Project" : "Update Project"}
                         </button>
                     </div>
 
