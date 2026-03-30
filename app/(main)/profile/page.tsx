@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import axios from 'axios'
 import { IoHeartOutline, IoGridOutline, IoBookmarkOutline, IoPersonOutline, IoSettingsOutline, IoCameraOutline, IoTrashOutline } from 'react-icons/io5'
 import { FaEye } from 'react-icons/fa6'
-import { BsHeart, BsBookmark } from 'react-icons/bs'
+import { BsHeart, BsHeartFill, BsBookmark, BsBookmarkFill } from 'react-icons/bs'
 import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
@@ -56,8 +56,8 @@ export default function ProfilePage() {
             </section>
             <section className="max-w-6xl mx-auto px-4 py-8">
                 {activePage === "Work" && <MyProjects session={session} />}
-                {activePage === "Liked Shots" && <Placeholder title="No liked shots yet" desc="Shots you like will appear here." />}
-                {activePage === "Collections" && <Placeholder title="No collections yet" desc="Save shots to collections to organize your inspiration." />}
+                {activePage === "Liked Shots" && <ProjectGrid fetchUrl="/api/project/liked" emptyTitle="No liked shots yet" emptyDesc="Shots you like will appear here." session={session} />}
+                {activePage === "Collections" && <ProjectGrid fetchUrl="/api/project/saved" emptyTitle="No collections yet" emptyDesc="Save shots to collections to organize your inspiration." session={session} />}
                 {activePage === "About" && <Placeholder title="No bio provided" desc="Add details about yourself to complete your profile." />}
             </section>
         </main>
@@ -208,5 +208,97 @@ function MyProjects({ session }: { session: any }) {
                 </div>
             )}
         </>
+    )
+}
+
+function ProjectGrid({ fetchUrl, emptyTitle, emptyDesc, session }: { fetchUrl: string, emptyTitle: string, emptyDesc: string, session: any }) {
+    const router = useRouter()
+    const [shots, setShots] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (!session?.user?.id) { setLoading(false); return }
+        const fetchCurrent = async () => {
+            try {
+                const res = await axios.get(fetchUrl)
+                if (res.data.success) setShots(res.data.projects || [])
+            } catch (error) {
+                console.error(error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchCurrent()
+    }, [session?.user?.id, fetchUrl])
+
+    const handleLike = async (e: React.MouseEvent, id: string, isLiked: boolean) => {
+        e.stopPropagation()
+        if (!session?.user?.id) return router.push("/api/auth/signin")
+        
+        setShots(prev => prev.map(p => p._id === id ? { ...p, likes: isLiked ? (p.likes || []).filter((uid: string) => uid !== session.user.id) : [...(p.likes || []), session.user.id] } : p))
+        axios.post(`/api/project/${id}/like`).catch(() => {
+            setShots(prev => prev.map(p => p._id === id ? { ...p, likes: !isLiked ? (p.likes || []).filter((uid: string) => uid !== session.user.id) : [...(p.likes || []), session.user.id] } : p))
+        })
+    }
+
+    const handleSave = async (e: React.MouseEvent, id: string, isSaved: boolean) => {
+        e.stopPropagation()
+        if (!session?.user?.id) return router.push("/api/auth/signin")
+        
+        setShots(prev => prev.map(p => p._id === id ? { ...p, saves: isSaved ? (p.saves || []).filter((uid: string) => uid !== session.user.id) : [...(p.saves || []), session.user.id] } : p))
+        axios.post(`/api/project/${id}/save`).catch(() => {
+            setShots(prev => prev.map(p => p._id === id ? { ...p, saves: !isSaved ? (p.saves || []).filter((uid: string) => uid !== session.user.id) : [...(p.saves || []), session.user.id] } : p))
+        })
+    }
+
+    if (loading) return <div className="text-center py-20 text-gray-400">Loading...</div>
+    if (shots.length === 0) return <Placeholder title={emptyTitle} desc={emptyDesc} />
+
+    return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 text-white">
+            {shots.map((shot) => {
+                const isLiked = session?.user?.id && Array.isArray(shot.likes) && shot.likes.includes(session.user.id);
+                const isSaved = session?.user?.id && Array.isArray(shot.saves) && shot.saves.includes(session.user.id);
+                
+                return (
+                    <div key={shot._id} className="flex flex-col gap-3 group cursor-pointer" onClick={() => router.push(`/project/${shot._id}`)}>
+                        <div className="relative rounded-lg overflow-hidden h-60 w-full bg-gray-900 border border-gray-800">
+                            {shot.image ? (
+                                <Image src={shot.image} alt={shot.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">No Image</div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-4">
+                                <span className="text-white text-sm font-medium truncate pr-4">{shot.title}</span>
+                                <div className="flex gap-2 shrink-0">
+                                    <button onClick={(e) => handleSave(e, shot._id, isSaved)} className={`${isSaved ? 'text-pink-500' : 'text-white hover:bg-pink-500 hover:text-white'} bg-black/40 p-2 rounded-full transition-colors backdrop-blur-sm`}>
+                                        {isSaved ? <BsBookmarkFill size={14} /> : <BsBookmark size={14} />}
+                                    </button>
+                                    <button onClick={(e) => handleLike(e, shot._id, isLiked)} className={`${isLiked ? 'text-pink-500' : 'text-white hover:bg-pink-500 hover:text-white'} bg-black/40 p-2 rounded-full transition-colors backdrop-blur-sm`}>
+                                        {isLiked ? <BsHeartFill size={14} /> : <BsHeart size={14} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between px-1">
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-full bg-gray-800 overflow-hidden relative border border-gray-700">
+                                    {shot.author?.avatarUrl || shot.author?.avatar ? (
+                                        <Image src={shot.author?.avatarUrl || shot.author?.avatar} alt="author" fill className="object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-indigo-500 flex items-center justify-center text-[10px] text-white font-bold">{shot.author?.fullName?.[0] || 'U'}</div>
+                                    )}
+                                </div>
+                                <span className="text-xs font-medium text-gray-300">{shot.author?.fullName || shot.author?.username || 'User'}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                                <div className="flex items-center gap-1 hover:text-white transition-colors"><BsHeart size={10} /> {shot.likes?.length || 0}</div>
+                                <div className="flex items-center gap-1 hover:text-white transition-colors"><FaEye size={10} /> {shot.views?.length || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
     )
 }
