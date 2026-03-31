@@ -116,9 +116,10 @@ export default function ProjectForm({ type, projectId }: { type: "create" | "edi
                     router.push("/profile")
                 }, 1500)
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(err)
-            setError("Failed to submit project")
+            const errMsg = err.response?.data?.error || err.message || "Failed to submit project"
+            setError(errMsg)
         } finally {
             setSubmitting(false)
         }
