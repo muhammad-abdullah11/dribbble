@@ -53,33 +53,37 @@ export default function Header() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="flex items-center gap-3">
                         {session?.user ? (
                             <div className="flex items-center gap-3">
-                                <button 
+                                <div 
                                     onClick={() => router.push("/profile")}
-                                    className="hidden sm:block text-sm font-medium hover:text-pink-400 transition-all border border-gray-700 px-4 py-2 rounded-full"
+                                    className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-gray-700 cursor-pointer hover:border-pink-500 transition-all bg-gray-900 flex items-center justify-center text-xs font-bold shrink-0"
                                 >
-                                    {session.user.name}
-                                </button>
+                                    {(session.user as any).avatar || (session.user as any).image ? (
+                                        <img src={(session.user as any).avatar || (session.user as any).image} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-gray-400 capitalize">{(session.user.name || "U")[0]}</span>
+                                    )}
+                                </div>
                                 <button 
                                     onClick={() => signOut()}
-                                    className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                                    className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition-colors px-1"
                                 >
                                     Log out
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2 sm:gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4">
                                 <button 
                                     onClick={() => signIn()}
-                                    className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition-all px-2"
+                                    className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition-all"
                                 >
                                     Log in
                                 </button>
                                 <button 
                                     onClick={() => router.push("/signups")}
-                                    className="text-xs sm:text-sm font-semibold bg-pink-500 hover:bg-pink-600 text-white px-4 sm:px-6 py-2 rounded-full transition-all shadow-lg"
+                                    className="text-[10px] sm:text-sm font-semibold bg-pink-500 hover:bg-pink-600 text-white px-4 sm:px-6 py-2 rounded-full transition-all shadow-lg shadow-pink-500/20"
                                 >
                                     Sign up
                                 </button>
@@ -105,12 +109,20 @@ export default function Header() {
                                 <a key={item} href="#" className="block py-3 px-4 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg">{item}</a>
                             ))}
                             {session?.user && (
-                                <button 
-                                    onClick={() => { router.push("/profile"); setOpen(false); }}
-                                    className="w-full text-left py-3 px-4 text-sm font-bold text-pink-500 hover:bg-gray-800 rounded-lg border border-pink-500/20 mt-2"
-                                >
-                                    View Profile
-                                </button>
+                                <>
+                                    <button 
+                                        onClick={() => { router.push("/profile"); setOpen(false); }}
+                                        className="w-full text-left py-3 px-4 text-sm font-bold text-pink-500 hover:bg-gray-800 rounded-lg border border-pink-500/20 mt-2"
+                                    >
+                                        View Profile
+                                    </button>
+                                    <button 
+                                        onClick={() => signOut()}
+                                        className="w-full text-left py-3 px-4 text-sm font-bold text-gray-400 hover:bg-gray-800 rounded-lg mt-2"
+                                    >
+                                        Log out
+                                    </button>
+                                </>
                             )}
                         </nav>
                         {!session?.user && (
