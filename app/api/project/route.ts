@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/nextAuth";
 import { v2 as cloudinary } from "cloudinary";
 import { arrayBuffer } from "stream/consumers";
+import mongoose from "mongoose";
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -55,11 +56,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
         }
 
-        const project = await Project.create({ author: session.user.id, title, description, image: imageUrl, category, githubUrl, liveUrl, tags });
+        const authorId = (session.user as any).id;
+        if (!authorId || !mongoose.Types.ObjectId.isValid(authorId)) {
+            return NextResponse.json({ error: "Invalid user session. Please re-login." }, { status: 400 });
+        }
+
+        const project = await Project.create({ author: authorId, title, description, image: imageUrl, category, githubUrl, liveUrl, tags });
         return NextResponse.json({ message: "Project created successfully", project }, { status: 201 });
 
     } catch (error) {
-        return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
+        console.error("Project Creation Error:", error);
+        return NextResponse.json({ error: "Failed to create project", details: error instanceof Error ? error.message : String(error) }, { status: 500 });
     }
 }
 

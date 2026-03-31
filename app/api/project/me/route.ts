@@ -14,12 +14,12 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = (session.user as any)?.id;
-        if (!userId) {
-            return NextResponse.json({ success: false, message: "User ID is required" }, { status: 400 });
+        const authorId = (session.user as any).id;
+        if (!authorId || !mongoose.Types.ObjectId.isValid(authorId)) {
+            return NextResponse.json({ success: false, message: "Invalid user session. Please re-login." }, { status: 400 });
         }
 
-        const projects = await Project.find({ author: new mongoose.Types.ObjectId(userId) })
+        const projects = await Project.find({ author: authorId })
             .populate("author", "fullName avatarUrl username")
             .sort({ createdAt: -1 })
             .lean();

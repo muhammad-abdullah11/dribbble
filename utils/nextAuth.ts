@@ -54,21 +54,35 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, account, profile }) {
             if (user) {
-                token.id = user.id;
-                token.username = (user as any).username;
-                token.fullName = (user as any).fullName;
-                token.profilePicture = (user as any).profilePicture;
+                await dbConnect();
+                let dbUser = await User.findOne({ email: user.email });
+                
+                if (!dbUser && user.email) {
+                    dbUser = await User.create({
+                        email: user.email,
+                        fullName: user.name || (user as any).fullName || "User",
+                        username: (user as any).username || user.email.split("@")[0] + Math.floor(Math.random() * 1000),
+                        password: Math.random().toString(36).slice(-10),
+                        avatarUrl: user.image || (user as any).avatarUrl,
+                        isVerified: true
+                    });
+                }
+
+                token.id = dbUser?._id?.toString() || user.id;
+                token.username = dbUser?.username || (user as any).username;
+                token.fullName = dbUser?.fullName || user.name;
+                token.avatarUrl = dbUser?.avatarUrl || user.image;
             }
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id as string;
-                session.user.username = token.username as string;
-                session.user.fullName = token.fullName as string;
-                session.user.avatarUrl = token.avatarUrl as string;
+                (session.user as any).id = token.id as string;
+                (session.user as any).username = token.username as string;
+                (session.user as any).fullName = token.fullName as string;
+                (session.user as any).avatarUrl = token.avatarUrl as string;
             }
             return session;
         },
