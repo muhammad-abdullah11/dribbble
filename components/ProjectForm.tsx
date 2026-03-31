@@ -25,6 +25,7 @@ export default function ProjectForm({ type, projectId }: { type: "create" | "edi
     const [submitted, setSubmitted] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [imageError, setImageError] = useState(false)
+    const [error, setError] = useState("")
     const router = useRouter()
 
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -83,8 +84,9 @@ export default function ProjectForm({ type, projectId }: { type: "create" | "edi
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!imageFile && !imageUrl) return alert("Please provide an image.")
-        if (!category) return alert("Please select a category.")
+        setError("")
+        if (!imageFile && !imageUrl) return setError("Please provide an image.")
+        if (!category) return setError("Please select a category.")
 
         setSubmitting(true)
         try {
@@ -114,9 +116,9 @@ export default function ProjectForm({ type, projectId }: { type: "create" | "edi
                     router.push("/profile")
                 }, 1500)
             }
-        } catch (error) {
-            console.error(error)
-            alert("Failed to submit project")
+        } catch (err) {
+            console.error(err)
+            setError("Failed to submit project")
         } finally {
             setSubmitting(false)
         }
@@ -135,6 +137,18 @@ export default function ProjectForm({ type, projectId }: { type: "create" | "edi
                     <div className="mb-6 flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-2xl px-5 py-4 text-green-400">
                         <IoCheckmarkCircle size={20} />
                         <span className="text-sm font-medium">Project saved successfully!</span>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="mb-6 flex items-center justify-between gap-3 bg-red-500/10 border border-red-500/30 rounded-2xl px-5 py-4 text-red-400">
+                        <div className="flex items-center gap-3">
+                            <IoClose size={20} className="text-red-500" />
+                            <span className="text-sm font-medium">{error}</span>
+                        </div>
+                        <button type="button" onClick={() => setError("")}>
+                            <IoClose size={16} />
+                        </button>
                     </div>
                 )}
 
